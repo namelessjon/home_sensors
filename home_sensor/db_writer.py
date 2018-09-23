@@ -14,23 +14,23 @@ class DBWriter(object):
         try:
             conn = psycopg2.connect(self.connection_string)
             with conn, conn.cursor() as cur:
-                sensor = _find_sensor(cur, self.sensor_name)
-                _write_many_sensor_readings(cur, sensor, readings)
+                sensor = self._find_sensor(cur, self.sensor_name)
+                self._write_many_sensor_readings(cur, sensor, readings)
         finally:
             conn.close()
 
-    def _write_one_sensor_reading(cursor, sensor, reading_type, reading):
+    def _write_one_sensor_reading(self, cursor, sensor, reading_type, reading):
         cursor.execute("""
         INSERT INTO
           sensor_readings(time, sensor_id, measure_type, reading)
         VALUES (NOW(), %s, %s, %s)""",
                        (sensor, reading_type, reading))
 
-    def _write_many_sensor_readings(cursor, sensor, readings):
+    def _write_many_sensor_readings(self, cursor, sensor, readings):
         for (t, reading) in readings.items():
-            _write_one_sensor_reading(cursor, sensor, t, reading)
+            self._write_one_sensor_reading(cursor, sensor, t, reading)
 
-    def _find_sensor(cursor, sensor_name):
+    def _find_sensor(self, cursor, sensor_name):
         id = cursor.execute("SELECT id FROM sensors WHERE sensor = %s",
                             (sensor_name,))
         id = cursor.fetchone()
